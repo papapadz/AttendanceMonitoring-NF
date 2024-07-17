@@ -19,12 +19,13 @@ public class Config {
     public static final String JDBC_DRIVER = "com.mysql.jdbc.Driver"; 
     
     //public static final String DB_URL = "jdbc:mysql://localhost/hris";
-    public static final String DB_URL = "jdbc:mysql://"+SERVERIP+"/nf";
+    public static final String DB_URL = "jdbc:mysql://"+SERVERIP+"/nf2";
     //  Database credentials
    static final String USER = "root";
    static final String PASS = "";
    
-   public static final String MACHINE_ID = "102";
+   static final int COMPANY_ID = 1;
+   public static final String MACHINE_ID = "101";
    
    
 }

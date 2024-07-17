@@ -306,7 +306,8 @@ public class DigitalPersona {
 	        return samples.take();
 	    } catch (RuntimeException e) {
 	        MainGUI.popUp(e+"Failed to start capture. Check that reader is not used by another application.\n","Error");
-	        throw e;
+                System.exit(1);
+                throw e;
 	    } finally { 
 	        capture.stopCapture();
 	    } 

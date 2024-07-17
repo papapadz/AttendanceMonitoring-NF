@@ -38,6 +38,7 @@ public class MainGUI extends javax.swing.JFrame {
     public MainGUI() {
         initComponents();
         setClockTime s = new setClockTime();
+        
         setCalendar();
     }
 
@@ -633,7 +634,7 @@ public class MainGUI extends javax.swing.JFrame {
         lblAMout.setText("");
         lblPMin.setText("");
         lblPMout.setText("");
-       // setCalendar();
+        setCalendar();
     }//GEN-LAST:event_cmdClearActionPerformed
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
