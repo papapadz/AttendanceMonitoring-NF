@@ -14,18 +14,17 @@ package attendancemonitoring;
 public class Config {
     //  jdbc and mySQL database
     //public static final String serverIP = "192.168.0.19";
-    public static final String SERVERIP = "localhost";
+    private static final String SERVER_NAME = "localhost";
     //public static final String serverIP = "10.13.1.82";
     public static final String JDBC_DRIVER = "com.mysql.jdbc.Driver"; 
     
     //public static final String DB_URL = "jdbc:mysql://localhost/hris";
-    public static final String DB_URL = "jdbc:mysql://"+SERVERIP+"/nf2";
+    public static final String DB_URL = "jdbc:mysql://"+SERVER_NAME+"/laravel";
     //  Database credentials
    static final String USER = "root";
    static final String PASS = "";
    
    static final int COMPANY_ID = 1;
    public static final String MACHINE_ID = "101";
-   
-   
+   static final String SERVER_URL = "http://"+SERVER_NAME+"/attendance-monitoring-webapp/public";
 }

@@ -38,7 +38,6 @@ public class MainGUI extends javax.swing.JFrame {
     public MainGUI() {
         initComponents();
         setClockTime s = new setClockTime();
-        
         setCalendar();
     }
 
