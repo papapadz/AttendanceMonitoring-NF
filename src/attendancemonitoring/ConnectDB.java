@@ -21,6 +21,9 @@ public class ConnectDB  {
    }catch(ClassNotFoundException | SQLException se){
       //Handle errors for JDBC
       se.printStackTrace();
+      System.out.println("Error connecting to database...");
+   } finally {
+       System.out.println("Sucess! Connected to database!");
    }
    
    return conn;

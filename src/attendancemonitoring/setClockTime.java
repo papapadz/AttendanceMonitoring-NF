@@ -18,6 +18,7 @@ public class setClockTime implements Runnable {
         Thread runner;
         Crud getT = new Crud();
         int ctr = 0;
+        
         public setClockTime() {
             start();
         }
@@ -40,12 +41,10 @@ public class setClockTime implements Runnable {
            {
                
                MainGUI.lblTime.setText(getT.getTimeNow(0));
+               MainGUI.refreshCalendar();
                ctr++;
                if(ctr>=6) {
-                   MainGUI.jPanel4.setBackground(Color.WHITE);
-                   MainGUI.jPanel1.setBackground(Color.WHITE);
-                   MainGUI.jPanel7.setBackground(Color.WHITE);
-                   MainGUI.jLabel9.setText("NORTH FLASH POWER AND BUILDS, INC");
+                   MainGUI.resetUI();
                    ctr = 0;
                }
                

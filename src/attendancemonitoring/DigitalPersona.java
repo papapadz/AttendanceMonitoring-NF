@@ -4,6 +4,10 @@
  * and open the template in the editor.
  */
 package attendancemonitoring;
+
+import static attendancemonitoring.MainGUI.playAudio;
+import fpregistration.*;
+
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -12,19 +16,24 @@ import com.digitalpersona.onetouch.DPFPGlobal;
 import com.digitalpersona.onetouch.DPFPSample;
 import com.digitalpersona.onetouch.DPFPFeatureSet;
 import com.digitalpersona.onetouch.DPFPDataPurpose;
+import com.digitalpersona.onetouch.DPFPTemplate;
 import com.digitalpersona.onetouch.capture.DPFPCapture;
 import com.digitalpersona.onetouch.capture.DPFPCapturePriority;
 import com.digitalpersona.onetouch.capture.event.DPFPDataEvent;
 import com.digitalpersona.onetouch.capture.event.DPFPReaderStatusAdapter;
 import com.digitalpersona.onetouch.capture.event.DPFPReaderStatusEvent;
+import com.digitalpersona.onetouch.processing.DPFPEnrollment;
 import com.digitalpersona.onetouch.processing.DPFPFeatureExtraction;
+import com.digitalpersona.onetouch.processing.DPFPImageQualityException;
 import com.digitalpersona.onetouch.readers.DPFPReadersCollection;
+import static java.awt.image.ImageObserver.WIDTH;
 //import com.digitalpersona.onetouch.verification.DPFPVerification;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -46,23 +55,105 @@ public class DigitalPersona {
 //	static EnumMap<DPFPFingerIndex, DPFPTemplate> templates = new EnumMap<DPFPFingerIndex, DPFPTemplate>(DPFPFingerIndex.class);
 //        static ArrayList<String> empNum = new ArrayList<String>();
     static Crud c = new Crud();
-        
-        public void DigitalPersona() {
-                
+    static DPFPCapture CAPTURE = DPFPGlobal.getCaptureFactory().createCapture();;
+    public void DigitalPersona() {
                 
             try {
-                DigitalPersona dp = new DigitalPersona();
+//                DigitalPersona dp = new DigitalPersona();
                 
-                if(!dp.verify(null))
+                if(!verify(null))
                     MainGUI.infoBox("Please try again!", "Information");
                 
             } catch (UnsupportedAudioFileException | IOException | LineUnavailableException ex) {
                 Logger.getLogger(DigitalPersona.class.getName()).log(Level.SEVERE, null, ex);
             }
-        
         }
+        
+    public void DigitalPersona(boolean isNew)  {
+            FpRegistration.infoBox("Register your RIGHT INDEX FINGER", "Message");
+            DPFPTemplate temp = this.getTemplate(null, 5);
+            byte[] a = temp.serialize();
+//            FpRegistration.jTextArea1.append("\nRegister Next Finger.\n");
+            
+            FpRegistration.infoBox("Register your LEFT INDEX FINGER", "Message");
+            DPFPTemplate temp2 = this.getTemplate(null, 5);
+            byte[] b = temp2.serialize();
+            
+            //DPFPTemplate temptemp = DPFPGlobal.getTemplateFactory().createTemplate();
+            insert(isNew, a, b);
+    }
+        
+    public DPFPTemplate getTemplate(String activeReader, int nFinger) {
+//        FpRegistration.jTextArea1.append("\nPerforming fingerprint enrollment...\n");
+         
+        DPFPTemplate template = null;
+         
+        try {   
+            //DPFPFingerIndex finger = DPFPFingerIndex.values()[nFinger];
+            DPFPFeatureExtraction featureExtractor = DPFPGlobal.getFeatureExtractionFactory().createFeatureExtraction();
+            DPFPEnrollment enrollment = DPFPGlobal.getEnrollmentFactory().createEnrollment();
+            
+             do { 
+                
+                DPFPSample sample = getSample(activeReader, 
+                	String.format("Scan your %s (%d remaining)\n", "finger", enrollment.getFeaturesNeeded()));
+                if (sample == null) {
+                    continue; 
+                }
+//                FpRegistration.infoBox("Scan finger again...", "Message");
+                    
+                DPFPFeatureSet featureSet;
+                try { 
+                    featureSet = featureExtractor.createFeatureSet(sample, DPFPDataPurpose.DATA_PURPOSE_ENROLLMENT);
+                } catch (DPFPImageQualityException e) {
+//                    FpRegistration.jTextArea1.append("Bad image quality: Try again.\n");
+                    FpRegistration.infoBox("Bad image quality: Try again.", "Error");
+                    System.out.printf("Bad image quality: \"%s\". Try again. \n", e.getCaptureFeedback().toString());
+                    continue; 
+                } 
+ 
+                enrollment.addFeatures(featureSet);
+                playAudio(Config.AUDIO_SUCCESS);
+                
+            } while (enrollment.getFeaturesNeeded() > 0);
+            
+            template = enrollment.getTemplate();
+//          FpRegistration.jTextArea1.append("The fingerprint was enrolled.\n");
+            
+        } catch (DPFPImageQualityException e) {
+//            FpRegistration.jTextArea1.append("Failed to enroll the finger.\n");
+              FpRegistration.infoBox("Failed to enroll the finger", "Error");
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        } catch (UnsupportedAudioFileException ex) { 
+            Logger.getLogger(DigitalPersona.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (LineUnavailableException ex) {
+            Logger.getLogger(DigitalPersona.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(DigitalPersona.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return template;
+    }
+
+    public void insert(boolean isNew, byte[] digital, byte[] digital2){
+		
+             try { 
+                    
+                    ConnectDB cn = new ConnectDB();
+                    PreparedStatement st;
+                    st = cn.connect().prepareStatement("UPDATE people SET fingerprint_1=?, fingerprint_2=?, updated_at=CURRENT_TIMESTAMP() WHERE employee_id=? ");
+                    st.setBytes(1, digital); 
+                    st.setBytes(2, digital2); 
+                    st.setString(3, FpRegistration.jTextField3.getText()); 
+                    st.executeUpdate();
+                    
+		} catch (SQLException e) {  
+                    System.out.println(e.getMessage()); 
+                }
+	}
 	
-	public static void listReaders() { 
+    public static void listReaders() { 
         DPFPReadersCollection readers = DPFPGlobal.getReadersFactory().getReaders();
         if (readers == null || readers.isEmpty()) {
             try {
@@ -75,10 +166,15 @@ public class DigitalPersona {
         System.out.printf("Available readers:\n");
         readers.forEach((readerDescription) -> {
             System.out.println(readerDescription.getSerialNumber());
-            });
+          });
     } 
 
-	public boolean verify(String activeReader) {
+    public void release() {
+        CAPTURE.stopCapture();
+        CAPTURE.removeDataListener(null);
+    }
+    
+    public boolean verify(String activeReader) {
 	
         Boolean returnValue = false;
         
@@ -99,6 +195,7 @@ public class DigitalPersona {
             try {
 
                 File indexDir = new File(System.getProperty("user.dir")+"\\index"); //default index file save location
+                
                 for (final File filename : indexDir.listFiles()) {
 
                     br = new BufferedReader(new FileReader(filename)); //read JSON format array in the index file
@@ -271,10 +368,10 @@ public class DigitalPersona {
 	throws InterruptedException
 	{ 
 	    final LinkedBlockingQueue<DPFPSample> samples = new LinkedBlockingQueue<>();
-	    DPFPCapture capture = DPFPGlobal.getCaptureFactory().createCapture();
-	    capture.setReaderSerialNumber(activeReader);
-	    capture.setPriority(DPFPCapturePriority.CAPTURE_PRIORITY_LOW);
-	    capture.addDataListener((DPFPDataEvent e) -> {
+//	    DPFPCapture capture = DPFPGlobal.getCaptureFactory().createCapture();
+	    CAPTURE.setReaderSerialNumber(activeReader);
+	    CAPTURE.setPriority(DPFPCapturePriority.CAPTURE_PRIORITY_LOW);
+	    CAPTURE.addDataListener((DPFPDataEvent e) -> {
                 if (e != null && e.getSample() != null) {
                     try {
                         samples.put(e.getSample());
@@ -282,7 +379,7 @@ public class DigitalPersona {
                     }
                 }
             }); 
-	    capture.addReaderStatusListener(new DPFPReaderStatusAdapter()
+	    CAPTURE.addReaderStatusListener(new DPFPReaderStatusAdapter()
 	    { 
 	    	int lastStatus = DPFPReaderStatusEvent.READER_CONNECTED;
                     @Override
@@ -301,15 +398,16 @@ public class DigitalPersona {
 	    }); 
             
 	    try { 
-	        capture.startCapture();
+	        CAPTURE.startCapture();
 	        System.out.print(prompt);
 	        return samples.take();
 	    } catch (RuntimeException e) {
+                System.out.print(e.getMessage());
 	        MainGUI.popUp(e+"Failed to start capture. Check that reader is not used by another application.\n","Error");
                 System.exit(1);
                 throw e;
 	    } finally { 
-	        capture.stopCapture();
+	        CAPTURE.stopCapture();
 	    } 
 	} 
 }
