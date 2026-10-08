@@ -23,10 +23,11 @@ public class AttendanceMonitoring {
        
        try {
        //   Call the GUI
+//       System.out.print(System.getProperty("user.dir")+"\\index");
        start();
        //Crud c= new Crud();
        //myGUI.setAnnouncements(c.getAnnouncements());
-             
+       
        
       
        } catch (Exception ex) {
@@ -36,9 +37,8 @@ public class AttendanceMonitoring {
    
    public static void start() {
        if(pull()) {
-        show();
-        while(myGUI.isShowing()) 
-         dp.DigitalPersona();    
+            show();
+            while(myGUI.isShowing()) {dp.DigitalPersona();}
        }
        
    }
@@ -53,8 +53,8 @@ public class AttendanceMonitoring {
    
    public static boolean pull() {
         try {
-            if(!dp.createIndex())
-                MainGUI.popUp("Operation encountered an Error! Check your connection and restart the application", "Error");
+            dp.createIndex();
+//                MainGUI.popUp("Operation encountered an Error! Check your connection and restart the application", "Error");
             return true;
         } catch(Exception e) {
             return false;

@@ -192,7 +192,7 @@ public class Crud {
                     
                     //sql = "UPDATE tbl_employee_dtr SET "+f+"='"+timeNow+"' WHERE emp_id='"+id+"' AND dtr_date='"+dt+"'";
                     //sql = "UPDATE tbl_employee_dtr SET "+f+"=CURTIME() WHERE emp_id='"+id+"' AND dtr_date=DATE_FORMAT(CURDATE(),'%Y-%m-%d')";
-                    sql = "UPDATE tbl_employee_dtr SET "+f+"='"+timeNow+"' WHERE id='"+did+"'";
+                    sql = "UPDATE tbl_employee_dtr SET "+f+"='"+timeNow+"', sync=false WHERE id='"+did+"'";
                 }
                 else {
                     /*  if(schedOutNextDay==null || f.equalsIgnoreCase("TimeInAM")) {
@@ -222,7 +222,7 @@ public class Crud {
                                 sql = "UPDATE tbl_employee_dtr SET "+f+"=CURTIME() WHERE id='"+did+"'";
                             */
                             if(verifyYesterday(id)) {
-                                String query = "UPDATE tbl_employee_dtr SET timeout_nextday=CURRENT_TIMESTAMP WHERE id='"+did+"'";
+                                String query = "UPDATE tbl_employee_dtr SET timeout_nextday=CURRENT_TIMESTAMP, sync=false WHERE id='"+did+"'";
                                 st = connDB.connect().prepareStatement(query);
                                 st.executeUpdate();
                                 sql = "INSERT INTO tbl_employee_dtr(emp_id,"+f+",dtr_date,machine_id) VALUES ('"+id+"','"+timeNow+"',DATE_FORMAT(CURDATE(),'%Y-%m-%d'),'"+Config.MACHINE_ID+"')";
